@@ -20,13 +20,15 @@ Calling `run()` in `stochastic.py` will run quantum amplitude estimation for `A(
 
 `notebook.ipynb` can be used to run the quantum amplitude estimation and to print circuit diagrams. 
 
-However, quantum amplitude estimation only performs better asymptotically. At such a small number of qubits, it is actually much faster to simulate the circuit repeatedly.
+[3] describes the techniques behind quantum amplitude estimation which is where we see the quadratic improvement in the dependence on epsilon. The technique is very similar to the ideas behind Grover's algorithm and in fact if you pick `A` to be Hadamard on `n` qubits, you end up with exactly Grover's diffusion operator. These are used in [1] in order to approximate the output of `A` by basically running `A` on `n` qubits and then using a rotation (unitary `W`) based off of the output of `A` in order to allow us to estimate the amplitudes of the terms corresponding to the output of `A`. We implemented the algorithm 1 described in order to run our experiment.  
+
+However, quantum amplitude estimation only performs better asymptotically in the dependence on the error epsilon which means we need less total samples from the algorithm `A`. At such a small number of qubits, it is actually much faster to simulate the circuit by running `A` repeatedly.
 
 # Future Work
 
 It is possible to reduce the number of qubits used in our Monte Carlo simulation. Doing so will increase the efficiency of our algorithm, allowing us to improve the precision without running out of qubits.
 
-This method could also be used to approximate other mathematical constants. We got the idea from a calculation of pi and we estimated e, but the quantum speedup method can be applied to other Monte Carlo simulations as well. 
+This method could also be used to approximate other mathematical constants. We got the idea from a calculation of pi and we estimated e, but the quantum speedup method can be applied to other Monte Carlo simulations as well. For example, these techniques for lowering dependence on the error could be useful in some algorithms widely used in classical contexts, for example sketching and streaming algorithms.
 
 # References
 
