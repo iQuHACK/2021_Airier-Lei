@@ -18,6 +18,8 @@ Using quantum amplitude estimation, it is no longer necessary to run the experim
 
 Calling `run()` in `stochastic.py` will run quantum amplitude estimation for `A(1, 2)`.
 
+`notebook.ipynb` can be used to run the quantum amplitude estimation and to print circuit diagrams. 
+
 However, quantum amplitude estimation only performs better asymptotically. At such a small number of qubits, it is actually much faster to simulate the circuit repeatedly.
 
 # Future Work

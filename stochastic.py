@@ -9,6 +9,7 @@ import math
 import sys
 from qiskit.aqua.algorithms import AmplitudeEstimation
 
+
 backend = Aer.get_backend('qasm_simulator')
 def execute_qc(qc, verbose=True, shots=1024):
     job = execute(qc, backend, shots=shots)
