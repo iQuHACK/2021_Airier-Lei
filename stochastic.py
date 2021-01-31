@@ -7,9 +7,10 @@ from qiskit.circuit.library import *
 from time import sleep
 import math
 import sys
+from qiskit.aqua.algorithms import AmplitudeEstimation
 
+backend = Aer.get_backend('qasm_simulator')
 def execute_qc(qc, verbose=True, shots=1024):
-    backend = Aer.get_backend('qasm_simulator')
     job = execute(qc, backend, shots=shots)
 
     while job.status() is not JobStatus.DONE:
@@ -56,16 +57,16 @@ def output_qubits_needed(trials):
 
 def A_size(bits, trials):
     random_qubits = bits * trials
-    sum_qubits = random_qubits + bits
-    not_done_size = trials + 1
+    sum_qubits = random_qubits - bits
+    not_done_size = trials
     output_size = output_qubits_needed(trials)
 
     return random_qubits + sum_qubits + 1 + not_done_size + output_size
 
 def A(bits, trials): # m digits, at most k trials
     random_qubits = bits * trials
-    sum_qubits = random_qubits + bits
-    not_done_size = trials + 1
+    sum_qubits = random_qubits - bits
+    not_done_size = trials
     output_size = output_qubits_needed(trials)
 
     qc = QuantumCircuit(random_qubits + sum_qubits + 1 + not_done_size + output_size)
@@ -84,19 +85,20 @@ def A(bits, trials): # m digits, at most k trials
     cadder = adder(bits).control(1)
     output_v = [j for j in range(output_start, output_start + output_size)]
 
-    for i in range(0, trials):
-        adder_input = [i*bits + j + random_qubits_start for j in range(bits)] + \
-                      [i*bits + j + sum_qubits_start for j in range(bits)] + \
-                      [(i+1)*bits + j + sum_qubits_start for j in range(bits)] + \
+    for i in range(0, trials-1):
+        adder_input = [i*bits + random_qubits_start + j for j in range(bits)] + \
+                      [(i-1)*bits + sum_qubits_start + j for j in range(bits)] + \
+                      [i*bits + sum_qubits_start + j for j in range(bits)] + \
                       [carry_qubit]
         qc.append(cadder, [not_done_start + i] + adder_input)
 
-        if i-1 > 0:
-            qc.append(output(output_size, i-1).control(2), [not_done_start + i, carry_qubit] + output_v)
+        if i > 0:
+            qc.append(output(output_size, i).control(2), [not_done_start + i, carry_qubit] + output_v)
 
         qc.cx(carry_qubit, not_done_start + i + 1)
     
     qc.append(output(output_size, trials-1).control(1), [not_done_start + not_done_size - 1] + output_v)
+    # print(qc)
 
     return qc.to_gate()
 
@@ -193,7 +195,7 @@ def run():
     logt = 1
     t = 2 ** logt
     max_trials = 2
-    precision = 2
+    precision = 1
     n = A_size(precision, max_trials)
     k = 2
 
@@ -204,26 +206,29 @@ def run():
         qc = QuantumCircuit(q0, q1, q2)
         qc.append(A(precision, max_trials), [q for q in q0] + [q for q in q1])
         qc.append(W(n=k), [q for q in q1] + [q for q in q2])
-        return qc.to_gate()
+        return qc
     
     results = []
     _U = U()
     for i in range(iterations):
         exp = 0
         for x in range(2 ** k):
-            qc = amplitude_estimation(_U, x=(x * 2 + 1), m=logt, N=n + 1)
-            res = execute_qc(qc, verbose=True, shots=1)
-            v = int(list(res.get_counts().keys())[0], 2)
-            alpha = pow(math.sin(math.pi * v / t), 2)
-            exp += alpha * alpha * x
+            # qc = amplitude_estimation(_U, x=(x * 2 + 1), m=logt, N=n + 1)
+            # res = execute_qc(qc, verbose=True, shots=1)
+            # v = int(list(res.get_counts().keys())[0], 2)
+
+            result = AmplitudeEstimation(n+1, _U, objective_qubits=[n]).run(backend)
+            print(result)
+
+            # alpha = pow(math.sin(math.pi * v / t), 2)
+            # exp += alpha * alpha * x
         results.append(exp)
     print(results)
 
-# run()
 
 def run_bare():
     trials = 3
-    precision = 3
+    precision = 4
     shots = 10_000
     output_size = output_qubits_needed(precision)
     gate = A(precision, trials)
@@ -243,4 +248,5 @@ def run_bare():
     e += 2
     print("e =", e)
 
+# run()
 run_bare()

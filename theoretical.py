@@ -17,4 +17,4 @@ def theoretical(bits, trials):
         s += res(i, 2**bits, trials)
     return s / 2 ** (bits * trials)
 
-print(theoretical(3, 3))
+print(theoretical(4, 3))
